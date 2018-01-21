@@ -14,9 +14,18 @@ window.Vue = require('vue');
  * the page. Then, you may begin adding components to this application
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
+ import leftSidebar from './components/sidebars/leftSidebar'
+ import Places from './pages/Places.vue';
+ import EditMarkers from './components/popups/EditMarkers.vue';
 
-Vue.component('example-component', require('./components/ExampleComponent.vue'));
+ Vue.component('togolist-places', Places);
+ Vue.component('edit-markers', EditMarkers);
+ Vue.component('left-sidebar', leftSidebar);
 
-const app = new Vue({
-    el: '#app'
+ const app =
+    new Vue({
+    el: '#app',
+        data: {
+            showModal: false
+        }
 });
