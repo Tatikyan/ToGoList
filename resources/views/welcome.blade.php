@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjsUCu9TfXeAuJmwnSA3nximCb0fZ8vR0"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjsUCu9TfXeAuJmwnSA3nximCb0fZ8vR0"></script>
         <title>ToGoList</title>
 
 
@@ -102,7 +102,7 @@
         <div id="app">
             <left-sidebar></left-sidebar>
             <toGoList-places></toGoList-places>
-            <edit-markers v-if="showModal" @cancel="showModal=false" @save="showModal=false"></edit-markers>
+            <edit-markers v-if="showModal"></edit-markers>
             {{--<router-view></router-view>--}}
         </div>
 

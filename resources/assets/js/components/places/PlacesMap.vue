@@ -1,20 +1,13 @@
-<style lang="scss">
-    div#places-map{
-        width: 80%;
-        height: 500px;
-    }
-</style>
-
 <template>
     <div id="places-map">
 
     </div>
 </template>
 
-
 <script>
-    import EditMarker from '../popups/EditMarkers.vue';
+    import TOGOLIST_CONFIG from '../../config.js';
     export default {
+        // declare the props
         props: {
             'latitude': {
                 type: Number,
@@ -33,47 +26,35 @@
                 default: function(){
                     return 6
                 }
-            }
-        },
-
-        data(){
-            return {
-                markers: []
-            }
-        },
-
-        computed: {
-            /*
-              Gets the places
-            */
-            places(){
-                // return this.$store.getters.getPlaces
-                return {
-                    markerCoordinates: [{
-                        latitude: 58.351307,
-                        longitude: 11.885834
-                    }, {
-                        latitude: 57.751442,
-                        longitude: 16.628838
-                    }, {
-                        latitude: 57.708870,
-                        longitude: 11.974560
-                    }]
+            },
+            'placeName': {
+                type: String,
+                default: function(){
+                    return ""
+                }
+            },
+            'visited': {
+                type: Number,
+                default: function(){
+                    return 0
+                }
+            },
+            'markers': {
+                type: Array,
+                default: function(){
+                    return []
                 }
             }
         },
-
-        watch: {
-            /*
-              Watches the places. When they are updated, clear the markers
-              and re build them.
-            */
-            places(){
-                this.clearMarkers();
-                this.buildMarkers();
+        data(){
+            return {
+                places: []
             }
         },
-
+        computed: {
+        },
+        watch: {
+        },
         mounted(){
             /*
               We don't want the map to be reactive, so we initialize it locally,
@@ -83,75 +64,111 @@
                 center: {lat: this.latitude, lng: this.longitude},
                 zoom: this.zoom
             });
-
-            /*
-              Clear and re-build the markers
-            */
-            this.clearMarkers();
-            this.buildMarkers();
-            this.clickOnMap();
+             this.getPlaces();
+             this.clickOnMap();
+             this.$root.$on('showPlaceOnTheMap', this.showPlaceOnTheMap);
+             this.$root.$on('updateMap', this.getPlaces);
         },
 
         methods: {
             /*
               Clears the markers from the map.
             */
-            clearMarkers(){
+            clearMarkers(places){
                 /*
                   Iterate over all of the markers and set the map
                   to null so they disappear.
                 */
-                for( var i = 0; i < this.markers.length; i++ ){
-                    this.markers[i].setMap( null );
+                for( var i = 0; i < this.$root.markers.length; i++ ){
+                    this.$root.markers[i].setMap( null );
                 }
             },
 
             /*
-              Builds all of the markers for the places
+              Gets all places from data base
             */
-            buildMarkers(){
+            getPlaces(){
                 /*
-                  Initialize the markers to an empty array.
+                clears markers
+                 */
+                this.clearMarkers();
+                var places = [];
+                var self = this;
+                let uri = TOGOLIST_CONFIG.API_URL + 'places';
+                /*
+                makes ajax call to data base and gets places
                 */
-                this.markers = [];
-
+                this.axios.get(uri).then((response) => {
+                    places = response.data;
+                    self.$root.$emit('places', places);
+                    self.$root.places = places;
+                    self.places = places;
+                    /*
+                    builds markers
+                     */
+                    this.buildMarkers(places);
+                    return {
+                        places: places
+                    }
+                });
+            },
+            /*
+            Builds markers on the map
+             */
+            buildMarkers(places){
                 /*
                   Iterate over all of the places
                 */
-                for( var i = 0; i < this.places.markerCoordinates.length; i++ ){
-                    /*
-                      Create the marker for each of the cafes and set the
-                      latitude and longitude to the latitude and longitude
-                      of the cafe. Also set the map to be the local map.
-                    */
+                var placeVisitedInfo;
+                for( var i = 0; i < places.length; i++ ){
+                    if (places[i].visited === 1){
+                        placeVisitedInfo = " (Visited)";
+                    }else {
+                        placeVisitedInfo = "";
+                    }
                     var marker = new google.maps.Marker({
-                        position: { lat: parseFloat( this.places.markerCoordinates[i].latitude ), lng: parseFloat( this.places.markerCoordinates[i].longitude ) },
+                        position: { lat: parseFloat( places[i].latitude ), lng: parseFloat( places[i].longitude ) },
+                        label:{
+                            text:places[i].placeName + placeVisitedInfo,
+                            color:"black"
+                        } ,
                         map: this.map
                     });
-
                     /*
                       Push the new marker on to the array.
                     */
-                    this.markers.push( marker );
+                    this.$root.markers.push(marker);
                 }
+            },
+            /*
+            Shows selected place on the map
+            */
+            showPlaceOnTheMap(latlng){
+                 this.$root.map = this.map;
+                 this.$root.map.panTo(latlng);
             },
             /*
             Handles event on map click, puts the marker and makes it center aligned on the map
              */
             clickOnMap() {
-                var marker;
                 var selfMap = this.map;
                 var root = this.$root;
                 this.map.addListener('click', function(e) {
                     root.showModal = true;
-                    marker = new google.maps.Marker({
-                        position: e.latLng,
-                        map: selfMap
-                    });
-                    selfMap.panTo(e.latLng);
+                    root.map = selfMap;
+                    root.position = {
+                        latlng:e.latLng
+                    };
                 });
-                this.markers.push(marker);
             }
         }
     }
 </script>
+<style lang="scss">
+    /*
+    styles for the places map component
+     */
+    div#places-map{
+        height: 500px;
+    }
+</style>
