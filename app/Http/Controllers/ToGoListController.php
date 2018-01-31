@@ -15,8 +15,6 @@ class ToGoListController extends Controller
      */
     public function index()
     {
-//        $places = toGoList::all();
-//        $places= toGoList::select('placeName')->get();
         $places= toGoList::select([
             'id' => 'id',
             'placeName' => 'placeName',
